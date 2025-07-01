@@ -1,0 +1,46 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+
+final Map<String, List<String>> flavorGroups = {
+  'Flowers': ['Chamomile', 'Meadow flowers', 'Jasmine', 'Lilac', 'Geranium', 'Yellow flowers', 'Roses', 'Lavender'],
+  'Citrus': ['Bergamot', 'Lime', 'Lemon', 'Pomelo', 'Grapefruit', 'Orange', 'Mandarin'],
+  'Tropical Fruits': ['Pineapple', 'Kiwi', 'Guava', 'Lychee', 'Papaya', 'Banana', 'Mango'],
+  'Fruity': ['Peach', 'Apricot', 'Quince', 'Pear', 'Red apple', 'Green apple'],
+  'Berry': ['Plum', 'Cherry', 'Sweet cherry', 'Dark berries', 'Black currant', 'Strawberry', 'Raspberry', 'Wild strawberry', 'Red grape', 'Black grape'],
+  'Dried Fruits': ['Raisin', 'Dried apricot', 'Prune'],
+  'Chocolate': ['Chocolate', 'Cocoa'],
+  'Nutty': ['Peanut', 'Walnut', 'Pecan', 'Almond', 'Hazelnut', 'Cashew'],
+  'Bakery': ['Cookie', 'Bun', 'Pie'],
+  'Spicy': ['Cinnamon', 'Anise', 'Clove', 'Nutmeg', 'Ginger'],
+  'Smoky': ['Smoke', 'Tree resin'],
+  'Woody': ['Fruit tree', 'Conifer tree', 'Bark'],
+  'Tannic': ['Barrel', 'Paper', 'Apple seed'],
+  'Mineral': ['Salt', 'Sulfur', 'Metal', 'Rotten leaves', 'Earth'],
+  'Marine': ['Seaweed', 'Iodine', 'Crab', 'Salted fish'],
+  'Vegetable': ['Baked potato', 'Carrot', 'Beet', 'Cabbage', 'Broccoli', 'Tomato'],
+  'Greens': ['Sorrel', 'Spinach', 'Pea', 'Basil', 'Celery'],
+  'Green': ['Hay', 'Grass', 'Leaves', 'Eucalyptus'],
+  'Sweet': ['Honey', 'Caramel', 'Syrup'],
+};
+
+final Map<String, Color> groupColors = {
+  'Flowers': Colors.pinkAccent,
+  'Citrus': Colors.orangeAccent,
+  'Tropical Fruits': Colors.yellow,
+  'Fruity': Colors.deepOrangeAccent,
+  'Berry': Colors.red,
+  'Dried Fruits': Colors.brown.shade200,
+  'Chocolate': Colors.brown,
+  'Nutty': Colors.brown.shade400,
+  'Bakery': Colors.orange,
+  'Spicy': Colors.deepOrange,
+  'Smoky': Colors.grey,
+  'Woody': Colors.brown.shade300,
+  'Tannic': Colors.brown.shade600,
+  'Mineral': Colors.grey.shade600,
+  'Marine': Colors.lightBlue,
+  'Vegetable': Colors.amber,
+  'Greens': Colors.lightGreen,
+  'Green': Colors.green,
+  'Sweet': Colors.amberAccent,
+};
