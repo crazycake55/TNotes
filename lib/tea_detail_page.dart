@@ -40,28 +40,52 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: widget.tea.imgURL.trim().isNotEmpty
-                  ? CachedNetworkImage(
-                imageUrl: widget.tea.imgURL.trim(),
-                height: 200,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                placeholder: (_, __) =>
-                const Center(child: CircularProgressIndicator()),
-                errorWidget: (_, __, ___) => placeholderError(),
-              )
-                  : placeholderError(),
+            GestureDetector(
+              onTap: () {
+                if (widget.tea.imgURL.trim().isEmpty) return;
+                showDialog(
+                  context: context,
+                  builder: (_) => Dialog(
+                    insetPadding: const EdgeInsets.all(16),
+                    child: InteractiveViewer(
+                      child: CachedNetworkImage(
+                        imageUrl: widget.tea.imgURL.trim(),
+                        fit: BoxFit.contain,
+                        placeholder: (_, __) =>
+                        const Center(child: CircularProgressIndicator()),
+                        errorWidget: (_, __, ___) => placeholderError(),
+                      ),
+                    ),
+                  ),
+                );
+              },
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: widget.tea.imgURL.trim().isNotEmpty
+                    ? CachedNetworkImage(
+                  imageUrl: widget.tea.imgURL.trim(),
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  placeholder: (_, __) =>
+                  const Center(child: CircularProgressIndicator()),
+                  errorWidget: (_, __, ___) => placeholderError(),
+                )
+                    : placeholderError(),
+              ),
             ),
             const SizedBox(height: 16),
-            Text('Name: ${widget.tea.name}', style: const TextStyle(fontSize: 16)),
+            Text('Name: ${widget.tea.name}',
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Type: ${widget.tea.type}', style: const TextStyle(fontSize: 16)),
+            Text('Type: ${widget.tea.type}',
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Note: ${widget.tea.description}', style: const TextStyle(fontSize: 16)),
+            Text('Note: ${widget.tea.description}',
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
-            Text('Year: ${widget.tea.year}', style: const TextStyle(fontSize: 16)),
+            Text('Year: ${widget.tea.year}',
+                style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 16),
             const Text('Descriptors:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -100,7 +124,8 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
 
     void updateCardColor(Color newColor, void Function(void Function()) setState) {
       cardColor = newColor;
-      textColor = ThemeData.estimateBrightnessForColor(newColor) == Brightness.dark
+      textColor =
+      ThemeData.estimateBrightnessForColor(newColor) == Brightness.dark
           ? Colors.white
           : Colors.black;
       setState(() {});
@@ -154,7 +179,9 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
+                        boxShadow: [
+                          BoxShadow(color: Colors.black26, blurRadius: 10)
+                        ],
                       ),
                       child: Stack(
                         children: [
@@ -171,15 +198,18 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                                       width: 80,
                                       height: 80,
                                       fit: BoxFit.cover,
-                                      placeholder: (_, __) => placeholderImage(),
-                                      errorWidget: (_, __, ___) => placeholderImage(),
+                                      placeholder: (_, __) =>
+                                          placeholderImage(),
+                                      errorWidget: (_, __, ___) =>
+                                          placeholderImage(),
                                     )
                                         : placeholderImage(),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           _truncateTitle(widget.tea.name),
@@ -194,7 +224,9 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                                         const SizedBox(height: 4),
                                         Text(
                                           widget.tea.description,
-                                          style: TextStyle(fontSize: 16, color: textColor),
+                                          style: TextStyle(
+                                              fontSize: 16,
+                                              color: textColor),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -204,42 +236,20 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                                 ],
                               ),
                               const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Type: ',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: Text(
-                                      widget.tea.type,
-                                      style: TextStyle(color: textColor, fontSize: 15),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                'Type:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                  fontSize: 16,
+                                ),
                               ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  Text(
-                                    'Year: ',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: textColor,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  Text(
-                                    widget.tea.year,
-                                    style: TextStyle(color: textColor, fontSize: 15),
-                                  ),
-                                ],
+                              Text(
+                                widget.tea.type,
+                                style: TextStyle(
+                                    color: textColor, fontSize: 15),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 8),
                               Text(
@@ -253,7 +263,8 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                               const SizedBox(height: 4),
                               Text(
                                 _truncateDescriptors(widget.tea.descriptors),
-                                style: TextStyle(color: textColor, fontSize: 15),
+                                style: TextStyle(
+                                    color: textColor, fontSize: 15),
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -272,7 +283,6 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                               ),
                             ),
                           ),
-
                         ],
                       ),
                     ),
@@ -348,7 +358,8 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
 
   Future<void> shareCardAsImage() async {
     try {
-      final boundary = _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final boundary =
+      _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final pngBytes = byteData!.buffer.asUint8List();
@@ -357,7 +368,8 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
       final file = File('${tempDir.path}/tea_card.png');
       await file.writeAsBytes(pngBytes);
 
-      await Share.shareXFiles([XFile(file.path)], text: 'Check out my tea card!\nMade in TNotes app');
+      await Share.shareXFiles([XFile(file.path)],
+          text: 'Check out my tea card!\nMade in TNotes app');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

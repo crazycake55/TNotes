@@ -2,9 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter/services.dart';
+import 'package:app_links/app_links.dart';
 
 import 'tea.dart';
 import 'tea_detail_page.dart';
@@ -12,8 +15,6 @@ import 'add_tea_page.dart';
 import 'tea_stats.dart';
 import 'database_helper.dart';
 import 'qr_scanner_page.dart';
-import 'package:flutter/services.dart';
-import 'package:app_links/app_links.dart';
 
 class TeaListPage extends StatefulWidget {
   const TeaListPage({super.key});
@@ -31,6 +32,7 @@ class _TeaListPageState extends State<TeaListPage> {
   List<String> selectedDescriptors = [];
   bool showFilters = false;
   late final AppLinks _appLinks;
+  TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
@@ -42,65 +44,10 @@ class _TeaListPageState extends State<TeaListPage> {
   void _initDeepLinks() async {
     _appLinks = AppLinks();
     final initialUri = await _appLinks.getInitialAppLink();
-    if (initialUri != null) {
-      _handleDeepLink(initialUri);
-    }
-
+    if (initialUri != null) _handleDeepLink(initialUri);
     _appLinks.uriLinkStream.listen((uri) {
       if (uri != null) _handleDeepLink(uri);
     });
-  }
-
-  void _processScannedQRCode(String rawValue) async {
-    Uri? uri;
-    try {
-      uri = Uri.parse(rawValue);
-    } catch (_) {
-      uri = null;
-    }
-
-    if (uri == null || uri.scheme != 'tnotes' || uri.host != 'import-tea') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid QR code')),
-      );
-      return;
-    }
-
-    final tea = Tea(
-      name: uri.queryParameters['name'] ?? '',
-      year: uri.queryParameters['year'] ?? '',
-      type: uri.queryParameters['type'] ?? '',
-      imgURL: uri.queryParameters['imgURL'] ?? '',
-      description: uri.queryParameters['description'] ?? '',
-      descriptors: uri.queryParameters['descriptors']?.split(',') ?? [],
-    );
-
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Import Tea'),
-        content: Text('Would you like to import "${tea.name}" into your collection?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Import'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      await DatabaseHelper.instance.insertTea(tea);
-      await loadTeas();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Tea "${tea.name}" has been added')),
-      );
-    }
   }
 
   Future<void> _handleDeepLink(Uri uri) async {
@@ -114,22 +61,14 @@ class _TeaListPageState extends State<TeaListPage> {
         descriptors: uri.queryParameters['descriptors']?.split(',') ?? [],
       );
 
-      if (!mounted) return;
-
       final confirm = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Import Tea'),
           content: Text('Would you like to import "${tea.name}" into your collection?'),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Import'),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+            TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Import')),
           ],
         ),
       );
@@ -166,8 +105,6 @@ class _TeaListPageState extends State<TeaListPage> {
     });
   }
 
-  TextEditingController searchController = TextEditingController();
-
   void resetFilters() {
     setState(() {
       searchController.clear();
@@ -188,25 +125,15 @@ class _TeaListPageState extends State<TeaListPage> {
   Future<void> exportToJsonFile() async {
     try {
       final teas = await DatabaseHelper.instance.getTeas();
-      final jsonString = jsonEncode(teas.map((t) => {
-        'name': t.name,
-        'year': t.year,
-        'type': t.type,
-        'imgURL': t.imgURL,
-        'description': t.description,
-        'descriptors': t.descriptors,
-      }).toList());
-
+      final jsonString = jsonEncode(teas.map((t) => t.toMap()).toList());
       final bytes = utf8.encode(jsonString);
 
       final directory = await getApplicationDocumentsDirectory();
       final filePath = '${directory.path}/tea_collection_${DateTime.now().millisecondsSinceEpoch}.json';
       final file = File(filePath);
-
       await file.writeAsBytes(bytes);
 
       await Share.shareXFiles([XFile(filePath)], text: 'My tea collection');
-
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -217,22 +144,11 @@ class _TeaListPageState extends State<TeaListPage> {
 
   Future<void> importFromJsonFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['json'],
-      );
-
-      if (result == null || result.files.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No file selected')),
-        );
-        return;
-      }
+      final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['json']);
+      if (result == null || result.files.isEmpty) return;
 
       final filePath = result.files.single.path!;
-      final file = File(filePath);
-      final content = await file.readAsString();
-
+      final content = await File(filePath).readAsString();
       final List<dynamic> importedData = jsonDecode(content);
 
       for (var item in importedData) {
@@ -259,6 +175,24 @@ class _TeaListPageState extends State<TeaListPage> {
     }
   }
 
+  Widget buildTeaThumbnail(String url) {
+    if (url.trim().isEmpty) {
+      return const Icon(Icons.image_not_supported, size: 40, color: Colors.grey);
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(4),
+      child: CachedNetworkImage(
+        imageUrl: url,
+        width: 40,
+        height: 40,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => const SizedBox(width: 40, height: 40, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+        errorWidget: (_, __, ___) => const Icon(Icons.broken_image, size: 40, color: Colors.grey),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final allYears = allTeas.map((t) => t.year).where((type) => type.isNotEmpty).toSet().toList()..sort();
@@ -270,11 +204,7 @@ class _TeaListPageState extends State<TeaListPage> {
         title: const Text('My teas'),
         actions: [
           if (showFilters)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: resetFilters,
-              tooltip: 'Cancel filters',
-            ),
+            IconButton(icon: const Icon(Icons.clear), onPressed: resetFilters, tooltip: 'Cancel filters'),
           Builder(
             builder: (context) => IconButton(
               icon: const Icon(Icons.filter_list),
@@ -299,79 +229,49 @@ class _TeaListPageState extends State<TeaListPage> {
                   border: OutlineInputBorder(),
                 ),
                 onChanged: (value) {
-                  setState(() {
-                    searchQuery = value;
-                  });
+                  searchQuery = value;
                 },
               ),
               const SizedBox(height: 20),
               if (allYears.isNotEmpty)
                 DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Filter by year',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: 'Filter by year', border: OutlineInputBorder()),
                   value: selectedYear.isEmpty ? null : selectedYear,
-                  items: [
-                    const DropdownMenuItem(value: '', child: Text('All years')),
-                    ...allYears.map((y) => DropdownMenuItem(value: y, child: Text(y)))
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedYear = value ?? '';
-                    });
-                  },
+                  items: [const DropdownMenuItem(value: '', child: Text('All years'))] +
+                      allYears.map((y) => DropdownMenuItem(value: y, child: Text(y))).toList(),
+                  onChanged: (value) => setState(() => selectedYear = value ?? ''),
                 ),
               const SizedBox(height: 20),
               if (allTypes.isNotEmpty)
                 DropdownButtonFormField<String>(
-                  decoration: const InputDecoration(
-                    labelText: 'Filter by type',
-                    border: OutlineInputBorder(),
-                  ),
+                  decoration: const InputDecoration(labelText: 'Filter by type', border: OutlineInputBorder()),
                   value: selectedType.isEmpty ? null : selectedType,
-                  items: [
-                    const DropdownMenuItem(value: '', child: Text('All types')),
-                    ...allTypes.map((type) => DropdownMenuItem(value: type, child: Text(type)))
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedType = value ?? '';
-                    });
-                  },
+                  items: [const DropdownMenuItem(value: '', child: Text('All types'))] +
+                      allTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+                  onChanged: (value) => setState(() => selectedType = value ?? ''),
                 ),
               const SizedBox(height: 20),
               const Text('Filter by descriptors', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 10),
               if (allDescriptors.isNotEmpty)
                 Wrap(
-                  spacing: 8.0,
-                  runSpacing: 4.0,
-                  children: allDescriptors.map((descriptor) {
-                    final isSelected = selectedDescriptors.contains(descriptor);
+                  spacing: 8,
+                  children: allDescriptors.map((desc) {
+                    final selected = selectedDescriptors.contains(desc);
                     return FilterChip(
-                      label: Text(descriptor),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        setState(() {
-                          if (selected) {
-                            selectedDescriptors.add(descriptor);
-                          } else {
-                            selectedDescriptors.remove(descriptor);
-                          }
-                        });
-                      },
+                      label: Text(desc),
+                      selected: selected,
+                      onSelected: (sel) => setState(() {
+                        sel ? selectedDescriptors.add(desc) : selectedDescriptors.remove(desc);
+                      }),
                     );
                   }).toList(),
                 ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  filterTeas();
-                  Navigator.pop(context);
-                },
-                child: const Text('Apply filters'),
-              )
+              ElevatedButton(onPressed: () {
+                filterTeas();
+                Navigator.pop(context);
+              }, child: const Text('Apply filters')),
             ],
           ),
         ),
@@ -380,17 +280,16 @@ class _TeaListPageState extends State<TeaListPage> {
         child: ListView(
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(image: DecorationImage(
-               image: AssetImage('assets/ic_launcher.png'), repeat: ImageRepeat.repeat,
-               ),
+              decoration: BoxDecoration(
+                image: DecorationImage(image: AssetImage('assets/ic_launcher.png'), repeat: ImageRepeat.repeat),
               ),
               child: Text('Menu', style: TextStyle(color: Colors.black, fontSize: 24, shadows: <Shadow>[
-                       Shadow(
-                         offset: Offset(1.0, 1.0),
-                             blurRadius: 3.0,
-                             color: Color.fromARGB(112, 0, 0, 0),
-                         ),
-                   ],)),
+                Shadow(
+                  offset: Offset(1.0, 1.0),
+                  blurRadius: 3.0,
+                  color: Color.fromARGB(112, 0, 0, 0),
+                ),
+              ],)),
             ),
             ListTile(
               leading: const Icon(Icons.upload_file),
@@ -413,13 +312,8 @@ class _TeaListPageState extends State<TeaListPage> {
               title: const Text('Scan QR code'),
               onTap: () async {
                 Navigator.pop(context);
-                final scannedData = await Navigator.push<String>(
-                  context,
-                  MaterialPageRoute(builder: (_) => const QRScannerPage()),
-                );
-                if (scannedData != null) {
-                  _processScannedQRCode(scannedData);
-                }
+                final scannedData = await Navigator.push<String>(context, MaterialPageRoute(builder: (_) => const QRScannerPage()));
+                if (scannedData != null) _handleDeepLink(Uri.parse(scannedData));
               },
             ),
             ListTile(
@@ -427,58 +321,45 @@ class _TeaListPageState extends State<TeaListPage> {
               title: const Text('Statistics'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => TeaStatsPage(teas: allTeas),
-                  ),
-                );
+                Navigator.push(context, MaterialPageRoute(builder: (_) => TeaStatsPage(teas: allTeas)));
               },
             ),
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              children: [
-                ...filteredTeas.map((tea) {
-                  return ListTile(
-                    title: Text(tea.name),
-                    subtitle: Text('Year: ${tea.year}, ${tea.descriptors.toString().replaceAll('[', '').replaceAll(']', '').replaceAll(',', ', ')}'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => TeaDetailPage(tea: tea)),
-                      );
-                    },
-                    trailing: PopupMenuButton<String>(
-                      onSelected: (value) async {
-                        if (value == 'edit') {
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => AddTeaPage(existingTea: tea.toMap()),
-                            ),
-                          );
-                          await loadTeas();
-                        } else if (value == 'delete') {
-                          await DatabaseHelper.instance.deleteTea(tea.id!);
-                          await loadTeas();
-                        }
-                      },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'delete', child: Text('Delete')),
-                      ],
-                    ),
-                  );
-                }),
+      body: ListView.builder(
+        itemCount: filteredTeas.length,
+        itemBuilder: (context, index) {
+          final tea = filteredTeas[index];
+          return ListTile(
+            leading: buildTeaThumbnail(tea.imgURL),
+            title: Text(tea.name),
+            subtitle: Text('Year: ${tea.year}, Type: ${tea.type}, Descriptors: ${tea.descriptors.join(', ')}'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => TeaDetailPage(tea: tea)),
+              );
+            },
+            trailing: PopupMenuButton<String>(
+              onSelected: (value) async {
+                if (value == 'edit') {
+                  await Navigator.push(context, MaterialPageRoute(
+                    builder: (_) => AddTeaPage(existingTea: tea.toMap()),
+                  ));
+                  await loadTeas();
+                } else if (value == 'delete') {
+                  await DatabaseHelper.instance.deleteTea(tea.id!);
+                  await loadTeas();
+                }
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'edit', child: Text('Edit')),
+                PopupMenuItem(value: 'delete', child: Text('Delete')),
               ],
             ),
-          ),
-        ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: navigateToAddTea,
