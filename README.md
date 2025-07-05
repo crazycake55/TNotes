@@ -20,6 +20,11 @@ Create TCards with your favourite teas and share them wth other people.
 
 ---
 
+![promo](https://github.com/user-attachments/assets/78bda7f9-48a4-47ca-9abf-60a1d149d974)
+
+![logo](https://github.com/user-attachments/assets/8ee075e1-4bd8-4f4b-bdb1-4ccd9d588c74)
+
+---
 ## 🛠 Technologies
 
 - [Flutter](https://flutter.dev/)
