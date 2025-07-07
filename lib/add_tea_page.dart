@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'database_helper.dart';
 import 'flavour_data.dart';
 
@@ -63,6 +64,14 @@ class _AddTeaPageState extends State<AddTeaPage> {
       return;
     }
 
+    String transformedUrl = imgUrl;
+    final googleDriveRegExp = RegExp(r'^https:\/\/drive\.google\.com\/file\/d\/([^\/]+)\/view');
+    final match = googleDriveRegExp.firstMatch(imgUrl);
+    if (match != null) {
+      final fileId = match.group(1);
+      transformedUrl = 'https://drive.google.com/uc?id=$fileId';
+    }
+
     final db = await DatabaseHelper.instance.database;
 
     final teaData = {
@@ -70,7 +79,7 @@ class _AddTeaPageState extends State<AddTeaPage> {
       'description': description,
       'year': year,
       'descriptors': descriptors.join(','),
-      'imgURL': imgUrl,
+      'imgURL': transformedUrl,
       'type': selectedType,
     };
 
@@ -115,6 +124,7 @@ class _AddTeaPageState extends State<AddTeaPage> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             ),
             const SizedBox(height: 10),
             TextField(

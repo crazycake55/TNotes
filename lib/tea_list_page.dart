@@ -125,15 +125,25 @@ class _TeaListPageState extends State<TeaListPage> {
   Future<void> exportToJsonFile() async {
     try {
       final teas = await DatabaseHelper.instance.getTeas();
-      final jsonString = jsonEncode(teas.map((t) => t.toMap()).toList());
+      final jsonString = jsonEncode(teas.map((t) => {
+        'name': t.name,
+        'year': t.year,
+        'type': t.type,
+        'imgURL': t.imgURL,
+        'description': t.description,
+        'descriptors': t.descriptors,
+      }).toList());
+
       final bytes = utf8.encode(jsonString);
 
       final directory = await getApplicationDocumentsDirectory();
       final filePath = '${directory.path}/tea_collection_${DateTime.now().millisecondsSinceEpoch}.json';
       final file = File(filePath);
+
       await file.writeAsBytes(bytes);
 
       await Share.shareXFiles([XFile(filePath)], text: 'My tea collection');
+
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
