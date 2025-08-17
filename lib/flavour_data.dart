@@ -2,15 +2,15 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 final Map<String, List<String>> flavorGroups = {
-  'Flowers': ['Chamomile', 'Meadow flowers', 'Jasmine', 'Lilac', 'Geranium', 'Yellow flowers', 'Roses', 'Lavender'],
+  'Flowers': ['Chamomile', 'Meadow flowers', 'Jasmine', 'Lilac', 'Geranium', 'Sunflower', 'Roses', 'Lavender', 'Orchid'],
   'Citrus': ['Bergamot', 'Lime', 'Lemon', 'Pomelo', 'Grapefruit', 'Orange', 'Mandarin'],
   'Tropical Fruits': ['Pineapple', 'Kiwi', 'Guava', 'Lychee', 'Papaya', 'Banana', 'Mango'],
   'Fruity': ['Peach', 'Apricot', 'Quince', 'Pear', 'Red apple', 'Green apple'],
   'Berry': ['Plum', 'Cherry', 'Sweet cherry', 'Dark berries', 'Black currant', 'Strawberry', 'Raspberry', 'Wild strawberry', 'Red grape', 'Black grape'],
   'Dried Fruits': ['Raisin', 'Dried apricot', 'Prune'],
   'Chocolate': ['Chocolate', 'Cocoa'],
-  'Nutty': ['Peanut', 'Walnut', 'Pecan', 'Almond', 'Hazelnut', 'Cashew'],
-  'Bakery': ['Cookie', 'Bun', 'Pie'],
+  'Nutty': ['Peanut', 'Walnut', 'Pecan', 'Almond', 'Hazelnut', 'Cashew', 'Pumpkin seed'],
+  'Bakery': ['Cookie', 'Bun', 'Pie', 'Bread crust'],
   'Spicy': ['Cinnamon', 'Anise', 'Clove', 'Nutmeg', 'Ginger'],
   'Smoky': ['Smoke', 'Tree resin'],
   'Woody': ['Fruit tree', 'Conifer tree', 'Bark'],

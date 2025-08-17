@@ -58,8 +58,12 @@ class _QRScannerPageState extends State<QRScannerPage> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: ElevatedButton.icon(
-              icon: Icon(isScanning ? Icons.stop : Icons.qr_code_scanner),
+              icon: Icon(isScanning ? Icons.stop : Icons.qr_code_scanner, color: Colors.white),
               label: Text(isScanning ? 'Stop Scanning' : 'Start Scanning'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFCD1C0E),
+                foregroundColor: Colors.white,
+              ),
               onPressed: () {
                 if (isScanning) {
                   stopScan();

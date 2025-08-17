@@ -213,8 +213,12 @@ class _AddTeaPageState extends State<AddTeaPage> {
             const SizedBox(height: 10),
             ElevatedButton.icon(
               onPressed: saveTea,
-              icon: const Icon(Icons.save),
+              icon: const Icon(Icons.save, color: Colors.white),
               label: Text(isEditing ? 'Apply changes' : 'Save new tea'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFFCD1C0E),
+                foregroundColor: Colors.white,
+              ),
             ),
           ],
         ),

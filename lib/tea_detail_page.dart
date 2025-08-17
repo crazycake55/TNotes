@@ -24,6 +24,7 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final descriptors = widget.tea.descriptors is List
         ? (widget.tea.descriptors as List).join(', ')
         : widget.tea.descriptors.toString();
@@ -32,68 +33,113 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
       appBar: AppBar(title: const Text('Tea Details')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: showTeaCardOverlay,
-        icon: const Icon(Icons.photo),
+        icon: const Icon(Icons.photo, color: Colors.white),
         label: const Text('Generate Card'),
+        backgroundColor: const Color(0xFFCD1C0E),
+        foregroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            GestureDetector(
-              onTap: () {
-                if (widget.tea.imgURL.trim().isEmpty) return;
-                showDialog(
-                  context: context,
-                  builder: (_) => Dialog(
-                    insetPadding: const EdgeInsets.all(16),
-                    child: InteractiveViewer(
-                      child: CachedNetworkImage(
-                        imageUrl: widget.tea.imgURL.trim(),
-                        fit: BoxFit.contain,
-                        placeholder: (_, __) =>
-                        const Center(child: CircularProgressIndicator()),
-                        errorWidget: (_, __, ___) => placeholderError(),
+            Stack(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    if (widget.tea.imgURL.trim().isEmpty) return;
+                    showDialog(
+                      context: context,
+                      builder: (_) => Dialog(
+                        insetPadding: const EdgeInsets.all(16),
+                        child: InteractiveViewer(
+                          child: CachedNetworkImage(
+                            imageUrl: widget.tea.imgURL.trim(),
+                            fit: BoxFit.contain,
+                            placeholder: (_, __) =>
+                            const Center(child: CircularProgressIndicator()),
+                            errorWidget: (_, __, ___) => placeholderError(),
+                          ),
+                        ),
                       ),
-                    ),
+                    );
+                  },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: widget.tea.imgURL.trim().isNotEmpty
+                        ? CachedNetworkImage(
+                      imageUrl: widget.tea.imgURL.trim(),
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) =>
+                      const Center(child: CircularProgressIndicator()),
+                      errorWidget: (_, __, ___) => placeholderError(),
+                    )
+                        : placeholderError(),
                   ),
-                );
-              },
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: widget.tea.imgURL.trim().isNotEmpty
-                    ? CachedNetworkImage(
-                  imageUrl: widget.tea.imgURL.trim(),
-                  height: 200,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  placeholder: (_, __) =>
-                  const Center(child: CircularProgressIndicator()),
-                  errorWidget: (_, __, ___) => placeholderError(),
+                ),
+                Positioned(
+                  right: 8,
+                  bottom: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Icon(Icons.zoom_in, color: Colors.white),
+                  ),
                 )
-                    : placeholderError(),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildInfoRow('Name:', widget.tea.name, isDark),
+            const SizedBox(height: 12),
+            _buildInfoRow('Type:', widget.tea.type, isDark),
+            const SizedBox(height: 12),
+            _buildInfoRow('Note:', widget.tea.description, isDark),
+            const SizedBox(height: 12),
+            _buildInfoRow('Year:', widget.tea.year.toString(), isDark),
+            const SizedBox(height: 24),
+            Text(
+              'Descriptors:',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDark ? Colors.white : Colors.black,
               ),
             ),
-            const SizedBox(height: 16),
-            Text('Name: ${widget.tea.name}',
-                style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 8),
-            Text('Type: ${widget.tea.type}',
-                style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 8),
-            Text('Note: ${widget.tea.description}',
-                style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 8),
-            Text('Year: ${widget.tea.year}',
-                style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 16),
-            const Text('Descriptors:',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             buildDescriptorsChips(descriptors.split(',')),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, bool isDark) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label ',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              color: isDark ? Colors.white70 : Colors.black87,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -124,8 +170,7 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
 
     void updateCardColor(Color newColor, void Function(void Function()) setState) {
       cardColor = newColor;
-      textColor =
-      ThemeData.estimateBrightnessForColor(newColor) == Brightness.dark
+      textColor = ThemeData.estimateBrightnessForColor(newColor) == Brightness.dark
           ? Colors.white
           : Colors.black;
       setState(() {});
@@ -179,7 +224,7 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(color: Colors.black26, blurRadius: 10)
                         ],
                       ),
@@ -198,18 +243,15 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                                       width: 80,
                                       height: 80,
                                       fit: BoxFit.cover,
-                                      placeholder: (_, __) =>
-                                          placeholderImage(),
-                                      errorWidget: (_, __, ___) =>
-                                          placeholderImage(),
+                                      placeholder: (_, __) => placeholderImage(),
+                                      errorWidget: (_, __, ___) => placeholderImage(),
                                     )
                                         : placeholderImage(),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           _truncateTitle(widget.tea.name),
@@ -224,9 +266,7 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                                         const SizedBox(height: 4),
                                         Text(
                                           widget.tea.description,
-                                          style: TextStyle(
-                                              fontSize: 16,
-                                              color: textColor),
+                                          style: TextStyle(fontSize: 16, color: textColor),
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -246,8 +286,7 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                               ),
                               Text(
                                 widget.tea.type,
-                                style: TextStyle(
-                                    color: textColor, fontSize: 15),
+                                style: TextStyle(color: textColor, fontSize: 15),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -263,8 +302,7 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                               const SizedBox(height: 4),
                               Text(
                                 _truncateDescriptors(widget.tea.descriptors),
-                                style: TextStyle(
-                                    color: textColor, fontSize: 15),
+                                style: TextStyle(color: textColor, fontSize: 15),
                                 maxLines: 3,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -293,8 +331,12 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
                     children: [
                       ElevatedButton.icon(
                         onPressed: shareCardAsImage,
-                        icon: const Icon(Icons.share),
+                        icon: const Icon(Icons.share, color: Colors.white),
                         label: const Text('Share PNG'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFCD1C0E),
+                          foregroundColor: Colors.white,
+                        ),
                       ),
                       Row(
                         children: [
@@ -317,19 +359,15 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
   }
 
   String _truncateTitle(String title) {
-    if (title.length <= 22) return title;
-    return '${title.substring(0, 22).trim()}...';
+    return title.length <= 22 ? title : '${title.substring(0, 22).trim()}...';
   }
 
   String _truncateDescriptors(List<String> descriptors) {
-    final fullString = descriptors.join(', ');
-    if (fullString.length <= 77) return fullString;
-    String truncated = fullString.substring(0, 85);
+    final full = descriptors.join(', ');
+    if (full.length <= 77) return full;
+    String truncated = full.substring(0, 85);
     final lastComma = truncated.lastIndexOf(',');
-    if (lastComma != -1) {
-      truncated = truncated.substring(0, lastComma);
-    }
-    return '${truncated.trim()}...';
+    return '${(lastComma != -1 ? truncated.substring(0, lastComma) : truncated).trim()}...';
   }
 
   Widget placeholderImage() {
@@ -358,8 +396,7 @@ class _TeaDetailPageState extends State<TeaDetailPage> {
 
   Future<void> shareCardAsImage() async {
     try {
-      final boundary =
-      _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      final boundary = _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 3.0);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       final pngBytes = byteData!.buffer.asUint8List();

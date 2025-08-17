@@ -15,6 +15,7 @@ import 'add_tea_page.dart';
 import 'tea_stats.dart';
 import 'database_helper.dart';
 import 'qr_scanner_page.dart';
+import 'preview_import_page.dart';
 
 class TeaListPage extends StatefulWidget {
   const TeaListPage({super.key});
@@ -161,29 +162,31 @@ class _TeaListPageState extends State<TeaListPage> {
       final content = await File(filePath).readAsString();
       final List<dynamic> importedData = jsonDecode(content);
 
-      for (var item in importedData) {
-        final tea = Tea(
-          name: item['name'] ?? '',
-          year: item['year'] ?? '',
-          type: item['type'] ?? '',
-          imgURL: item['imgURL'] ?? '',
-          description: item['description'] ?? '',
-          descriptors: List<String>.from(item['descriptors'] ?? []),
-        );
-        await DatabaseHelper.instance.insertTea(tea);
+      final teas = importedData.map((item) => Tea(
+        name: item['name'] ?? '',
+        year: item['year'] ?? '',
+        type: item['type'] ?? '',
+        imgURL: item['imgURL'] ?? '',
+        description: item['description'] ?? '',
+        descriptors: List<String>.from(item['descriptors'] ?? []),
+      )).toList();
+
+      final imported = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(builder: (_) => PreviewImportPage(teas: teas)),
+      );
+
+      if (imported == true) {
+        await loadTeas();
       }
 
-      await loadTeas();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Successfully imported')),
-      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error during import: $e')),
       );
     }
   }
+
 
   Widget buildTeaThumbnail(String url) {
     if (url.trim().isEmpty) {
@@ -278,10 +281,18 @@ class _TeaListPageState extends State<TeaListPage> {
                   }).toList(),
                 ),
               const SizedBox(height: 20),
-              ElevatedButton(onPressed: () {
-                filterTeas();
-                Navigator.pop(context);
-              }, child: const Text('Apply filters')),
+              ElevatedButton(
+                onPressed: () {
+                  filterTeas();
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFFCD1C0E),
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Apply filters'),
+              ),
+
             ],
           ),
         ),
@@ -293,16 +304,16 @@ class _TeaListPageState extends State<TeaListPage> {
               decoration: BoxDecoration(
                 image: DecorationImage(image: AssetImage('assets/ic_launcher.png'), repeat: ImageRepeat.repeat),
               ),
-              child: Text('Menu', style: TextStyle(color: Colors.black, fontSize: 24, shadows: <Shadow>[
-                Shadow(
-                  offset: Offset(1.0, 1.0),
-                  blurRadius: 3.0,
-                  color: Color.fromARGB(112, 0, 0, 0),
-                ),
+              child: Text('', style: TextStyle(color: Colors.black, fontSize: 24, shadows: <Shadow>[
+                // Shadow(
+                //   offset: Offset(1.0, 1.0),
+                //   blurRadius: 3.0,
+                //   color: Color.fromARGB(112, 0, 0, 0),
+                // ),
               ],)),
             ),
             ListTile(
-              leading: const Icon(Icons.upload_file),
+              leading: const Icon(Icons.download),
               title: const Text('Import collection'),
               onTap: () async {
                 Navigator.pop(context);
@@ -310,7 +321,7 @@ class _TeaListPageState extends State<TeaListPage> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.download),
+              leading: const Icon(Icons.upload_file),
               title: const Text('Export collection'),
               onTap: () async {
                 Navigator.pop(context);
@@ -339,6 +350,7 @@ class _TeaListPageState extends State<TeaListPage> {
       ),
       body: ListView.builder(
         itemCount: filteredTeas.length,
+        padding: const EdgeInsets.only(bottom: 80),
         itemBuilder: (context, index) {
           final tea = filteredTeas[index];
           return ListTile(
@@ -371,10 +383,18 @@ class _TeaListPageState extends State<TeaListPage> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: navigateToAddTea,
-        child: const Icon(Icons.add),
+      floatingActionButton: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.7,
+        height: 56,
+        child: FloatingActionButton.extended(
+          onPressed: navigateToAddTea,
+          backgroundColor: Color(0xFFCD1C0E),
+          foregroundColor: Colors.white,
+          icon: Icon(Icons.add),
+          label: Text('Add tea'),
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

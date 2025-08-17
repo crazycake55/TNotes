@@ -70,7 +70,7 @@ class TeaStatsPage extends StatelessWidget {
         return BarChartGroupData(x: i, barRods: [
           BarChartRodData(
             toY: values[i].toDouble(),
-            color: Colors.blueAccent,
+            color: Color(0xFFCD1C0E),
             width: 16,
             borderRadius: BorderRadius.circular(4),
           ),
